@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SIP-Guardian | Audit Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #0f0f0f; color: #00ff41; font-family: 'Consolas', monospace; }
+        .card { background: #1a1a1a; border: 1px solid #333; border-radius: 0; }
+        .terminal { background: #000; height: 350px; overflow-y: auto; padding: 15px; border: 1px solid #333; color: #00ff41; font-size: 14px; }
+        .btn-guard { background: #00ff41; color: #000; font-weight: bold; border-radius: 0; }
+        .form-control { background: #222; border: 1px solid #444; color: #00ff41; border-radius: 0; }
+        .form-control:focus { background: #222; color: #00ff41; border-color: #00ff41; box-shadow: none; }
+    </style>
+</head>
+<body class="container py-5">
+    <header class="mb-5 text-center">
+        <h1 style="letter-spacing: 5px;">SIP-GUARDIAN 🛡️</h1>
+        <p class="text-muted text-uppercase" style="font-size: 12px;">VoIP Security Audit & Penetration Testing Dashboard</p>
+    </header>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-4">
+                <h6 class="mb-3 text-white text-uppercase">Audit Config</h6>
+                <div class="mb-3">
+                    <label class="small">Target IP</label>
+                    <input type="text" id="target" class="form-control" placeholder="192.168.1.10">
+                </div>
+                <div class="mb-3">
+                    <label class="small">Username</label>
+                    <input type="text" id="username" class="form-control" placeholder="101">
+                </div>
+                <div class="mb-3">
+                    <label class="small">Password List (Comma separated)</label>
+                    <textarea id="passwords" class="form-control" rows="4">1234,admin,password,123456</textarea>
+                </div>
+                <button onclick="launch()" class="btn btn-guard w-100">LAUNCH AUDIT</button>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="terminal" id="terminal">
+                [SYSTEM] Awaiting Target Parameters...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logInterval;
+        function launch() {
+            const data = {
+                target: document.getElementById('target').value,
+                username: document.getElementById('username').value,
+                passwords: document.getElementById('passwords').value
+            };
+            
+            document.getElementById('terminal').innerHTML = "[SYSTEM] Initializing Engine...";
+
+            fetch('/api/start', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if(logInterval) clearInterval(logInterval);
+            logInterval = setInterval(fetchLogs, 1000);
+        }
+
+        function fetchLogs() {
+            fetch('/api/logs').then(r => r.json()).then(data => {
+                const term = document.getElementById('terminal');
+                if(data.logs.length > 0) {
+                    term.innerHTML = data.logs.map(l => `<div>${l}</div>`).join('');
+                    term.scrollTop = term.scrollHeight;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
